@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plano de Estudos — Analista de Sistemas | CRA-PR</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-brand">
+        <span class="topbar-tag">CRA-PR 2026</span>
+        <h1>Plano de Estudos — Analista de Sistemas (CRA-PR / Consulplan)</h1>
+        <p class="topbar-base" id="intro-base"></p>
+      </div>
+      <div class="topbar-meta">
+        <div class="meta-item">
+          <span class="meta-label">Prova objetiva</span>
+          <strong>13/09/2026</strong>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Questões</span>
+          <strong>50</strong>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Dias restantes</span>
+          <strong id="days-left">—</strong>
+        </div>
+      </div>
+    </div>
+    <nav class="main-tabs" id="main-tabs">
+      <button type="button" class="main-tab active" data-tab="conteudo">Conteúdo</button>
+      <button type="button" class="main-tab" data-tab="exercicios">Exercícios</button>
+      <button type="button" class="main-tab" data-tab="redacoes">Redações</button>
+      <button type="button" class="main-tab" data-tab="cronograma">Cronograma</button>
+    </nav>
+  </header>
+
+  <!-- ═══ ABA CONTEÚDO ═══ -->
+  <div class="tab-panel active" id="tab-conteudo">
+    <div class="layout">
+      <aside class="sidebar" id="sidebar-conteudo">
+        <nav class="nav-disciplinas" id="nav-disciplinas"></nav>
+        <div class="sidebar-block sidebar-progress">
+          <h3>Progresso geral</h3>
+          <div class="progress-ring-wrap">
+            <svg class="progress-ring" viewBox="0 0 80 80">
+              <circle class="ring-bg" cx="40" cy="40" r="34"></circle>
+              <circle class="ring-fill" id="ring-fill" cx="40" cy="40" r="34"></circle>
+            </svg>
+            <span class="progress-pct" id="progress-pct">0%</span>
+          </div>
+          <p class="progress-detail" id="progress-detail">0 de 0 tópicos</p>
+        </div>
+      </aside>
+
+      <main class="content">
+        <section class="panel" id="sec-perfil">
+          <div class="panel-head">
+            <h2>Perfil da banca</h2>
+            <span class="panel-sub">Importante saber antes de estudar</span>
+          </div>
+          <ul class="perfil-list" id="perfil-list"></ul>
+        </section>
+
+        <section class="panel" id="sec-ordem">
+          <div class="panel-head">
+            <h2>Ordem geral de ataque</h2>
+            <span class="panel-sub">Visão macro — prioridade de estudo</span>
+          </div>
+          <ol class="ordem-list" id="ordem-list"></ol>
+          <p class="ordem-nota" id="ordem-nota"></p>
+        </section>
+
+        <section class="panel resumo">
+          <div class="panel-head">
+            <h2>Distribuição da prova</h2>
+            <span class="panel-sub">Anexo I — cargo Analista de Sistemas</span>
+          </div>
+          <div class="dist-grid" id="dist-grid"></div>
+        </section>
+
+        <div id="disciplinas-container"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ═══ ABA EXERCÍCIOS ═══ -->
+  <div class="tab-panel" id="tab-exercicios">
+    <div class="layout">
+      <aside class="sidebar" id="sidebar-exercicios">
+        <div class="sidebar-block">
+          <h3>Simulados</h3>
+          <nav class="nav-quiz" id="nav-quiz"></nav>
+        </div>
+        <div class="sidebar-block sidebar-stats" id="quiz-stats"></div>
+      </aside>
+
+      <main class="content" id="quiz-main">
+        <div id="quiz-home"></div>
+        <div id="quiz-active" class="hidden"></div>
+        <div id="quiz-result" class="hidden"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ═══ ABA REDAÇÕES ═══ -->
+  <div class="tab-panel" id="tab-redacoes">
+    <div class="layout">
+      <aside class="sidebar" id="sidebar-redacoes">
+        <div class="sidebar-block">
+          <h3>Temas</h3>
+          <nav class="nav-disciplinas" id="nav-redacao"></nav>
+        </div>
+        <div class="sidebar-block" id="redacao-progress"></div>
+      </aside>
+
+      <main class="content">
+        <div id="redacao-intro"></div>
+        <div id="redacao-temas"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ═══ ABA CRONOGRAMA ═══ -->
+  <div class="tab-panel" id="tab-cronograma">
+    <div class="layout layout-cal">
+      <aside class="sidebar" id="cronograma-sidebar"></aside>
+      <main class="content content-cal">
+        <div id="cronograma-main"></div>
+      </main>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/quiz-data.js"></script>
+  <script src="js/redacao-data.js"></script>
+  <script src="js/cronograma-data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/redacao.js"></script>
+  <script src="js/cronograma.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
