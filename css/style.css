@@ -21,7 +21,7 @@
   --green: #1e8449;
   --green-bg: #e8f6ee;
   --sidebar-w: 220px;
-  --header-h: 90px;
+  --header-h: 112px;
   --font: "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
@@ -53,61 +53,69 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 10px 16px;
+  padding: 8px 16px 6px;
   max-width: 100%;
 }
 
 .topbar-brand {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
+  flex: 1;
 }
 
 .topbar-icon {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  flex: 0 0 auto;
+  display: block;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.12);
-  padding: 4px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 3px;
 }
 
 .topbar-brand-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   min-width: 0;
 }
 
 .topbar-tag {
   display: inline-block;
+  align-self: flex-start;
   background: var(--accent);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 2px 7px;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .topbar-brand h1 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .topbar-subtitle {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.7);
   margin-top: 1px;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
 .topbar-base {
-  font-size: 11px;
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.65);
-  margin-top: 2px;
-  line-height: 1.3;
+  margin-top: 1px;
+  line-height: 1.25;
 }
 
 .topbar-meta {
@@ -700,12 +708,21 @@ body {
 
   .topbar-inner {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px 12px 4px;
+  }
+
+  .topbar-brand {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
   }
 
   .topbar-meta {
-    gap: 16px;
+    gap: 12px;
+    width: 100%;
+    justify-content: space-between;
   }
 
   .meta-item {
@@ -715,7 +732,7 @@ body {
   .topbar-icon {
     width: 32px;
     height: 32px;
-    padding: 3px;
+    padding: 2px;
   }
 
   .topbar-brand h1 {
