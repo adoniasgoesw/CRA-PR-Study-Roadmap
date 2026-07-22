@@ -87,7 +87,7 @@
     `).join("");
 
     document.getElementById("ordem-nota").textContent =
-      "Com histórico em JS/front-end, o Bloco A do cargo específico já dá vantagem real. Foco maior de tempo: Legislação CRA-PR/CFA e Bloco C (SO, arquitetura, estrutura de dados).";
+      "Com histórico em JS/front-end, os itens 18–21 (Web, Django, DevOps) já dão vantagem. Foco maior de tempo: Legislação CRA-PR/CFA e itens 1–3 (arquitetura, SO, estrutura de dados).";
   }
 
   function renderDistribuicao() {
