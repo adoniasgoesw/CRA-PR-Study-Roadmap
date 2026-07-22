@@ -8,8 +8,8 @@
   const DIAS_SEM = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
   let view = "mes";
-  let cursor = new Date(2026, 6, 20);
-  let selected = new Date(2026, 6, 20);
+  let cursor = new Date(2026, 6, 21);
+  let selected = new Date(2026, 6, 21);
 
   function pad(n) {
     return String(n).padStart(2, "0");
