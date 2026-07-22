@@ -21,9 +21,11 @@ const CRONOGRAMA_PRIORIDADES = [
 
 const CRONOGRAMA_REGRAS = [
   "100% questões — gabarito comentado como teoria (só ler o que errou).",
-  "Período 1 (21/07–02/08): 4 disciplinas/dia — manhã 2 + noite 2 (pausa 10 min).",
-  "Período 2 (03/08–14/08): 3 disciplinas/dia — tarde 16:30–18:00 + noite 19:00–22:00.",
-  "Período 3 (15/08–12/09): 3 disciplinas/dia — tarde 16:30–18:00 + noite 19:00–22:00 (foco em simulados).",
+  "Período 1 (21/07–02/08): manhã 07:30–10:40 + noite 19:00–22:00 (pausa 10 min entre blocos).",
+  "P1 — com Português, RLM ou Informática: 3 disciplinas (2 leves no mesmo período + 1 pesada no outro).",
+  "P1 — só matérias extensas (Cargo, Adm. Pública, Legislação CRA): 2 disciplinas (1 manhã + 1 noite).",
+  "Frequência semanal: Informática 1× · Português 2× · Raciocínio Lógico 2×.",
+  "A partir de 03/08: 2 disciplinas/dia — tarde 16:30–18:00 + noite 19:00–22:00 (pausa 20:30–20:40).",
   "Sábado: redação discursiva. Domingo: simulado + revisão dos erros.",
   "Últimas 2 semanas: simulados de 50 questões cronometrados (corte 60%).",
   "Se atrasar, redistribua na mesma semana — não dobre a carga.",
@@ -48,43 +50,73 @@ function set(key, data) {
   CRONOGRAMA_DIAS[key] = buildDia(key, data);
 }
 
-/* Período 1 — 4 disciplinas/dia */
+/* Período 1 — manhã 2 blocos + noite 2 blocos */
 const P1 = {
   d1: (cat, titulo, desc) => slot("07:30–09:00", 1.5, cat, titulo, desc),
   d2: (cat, titulo, desc) => slot("09:10–10:40", 1.5, cat, titulo, desc),
-  rev: (desc) => slot("10:40–11:00", 0.3, "revisao", "Revisão rápida", desc),
   d3: (cat, titulo, desc) => slot("19:00–20:30", 1.5, cat, titulo, desc),
   d4: (cat, titulo, desc) => slot("20:40–22:00", 1.3, cat, titulo, desc),
 };
 
-/* Período 2 e 3 — 3 disciplinas/dia */
+/* A partir de 03/08 — 2 disciplinas/dia (tarde + noite) */
 const P2 = {
-  d1: (cat, titulo, desc) => slot("16:30–18:00", 1.5, cat, titulo, desc),
-  d2: (cat, titulo, desc) => slot("19:00–20:30", 1.5, cat, titulo, desc),
-  d3: (cat, titulo, desc) => slot("20:40–22:00", 1.3, cat, titulo, desc),
+  tarde: (cat, titulo, desc) => slot("16:30–18:00", 1.5, cat, titulo, desc),
+  noite1: (cat, titulo, desc) => slot("19:00–20:30", 1.5, cat, titulo, desc),
+  noite2: (cat, titulo, desc) => slot("20:40–22:00", 1.3, cat, titulo, desc),
 };
 
 function diaP1(key, sem, slots, nota) {
   set(key, { fase: 1, semana: sem, nota: nota || "", slots });
 }
 
-function diaP2(key, sem, slots, nota) {
-  set(key, { fase: 2, semana: sem, nota: nota || "", slots });
+function p1ManhaPar(s1, s2) {
+  return [P1.d1(s1[0], s1[1], s1[2]), P1.d2(s2[0], s2[1], s2[2])];
 }
 
-function diaP3(key, sem, slots, nota) {
-  set(key, { fase: 3, semana: sem, nota: nota || "", slots });
+function p1ManhaPesada(cat, titulo, desc) {
+  return [P1.d1(cat, titulo, desc), P1.d2(cat, titulo + " (cont.)", desc)];
 }
 
-function p1Dia(key, sem, d1, d2, d3, d4, rev, nota) {
-  diaP1(key, sem, [P1.d1(...d1), P1.d2(...d2), P1.rev(rev), P1.d3(...d3), P1.d4(...d4)], nota);
+function p1NoitePar(s1, s2) {
+  return [P1.d3(s1[0], s1[1], s1[2]), P1.d4(s2[0], s2[1], s2[2])];
+}
+
+function p1NoitePesada(cat, titulo, desc) {
+  return [P1.d3(cat, titulo, desc), P1.d4(cat, titulo + " (cont.)", desc)];
+}
+
+/** 3 disciplinas: par leve + pesada (manhã/noite ou vice-versa) */
+function p1Dia3(key, sem, manhaPar, noitePesada, nota) {
+  diaP1(key, sem, [...p1ManhaPar(...manhaPar), ...p1NoitePesada(...noitePesada)], nota);
+}
+
+function p1Dia3inv(key, sem, manhaPesada, noitePar, nota) {
+  diaP1(key, sem, [...p1ManhaPesada(...manhaPesada), ...p1NoitePar(...noitePar)], nota);
+}
+
+/** 2 disciplinas extensas: 1 manhã + 1 noite */
+function p1Dia2(key, sem, manha, noite, nota) {
+  diaP1(key, sem, [...p1ManhaPesada(...manha), ...p1NoitePesada(...noite)], nota);
+}
+
+function p2Noite(cat, titulo, desc) {
+  return [P2.noite1(cat, titulo, desc), P2.noite2(cat, titulo + " (cont.)", desc)];
+}
+
+/** 2 disciplinas: tarde + noite inteira */
+function p2Dia2(key, sem, tarde, noite, nota, fase) {
+  set(key, {
+    fase: fase || 2,
+    semana: sem,
+    nota: nota || "",
+    slots: [P2.tarde(...tarde), ...p2Noite(...noite)],
+  });
 }
 
 function sabRedacaoP1(key, sem, tema) {
   diaP1(key, sem, [
     P1.d1("redacao", "Redação — rascunho", `${tema} — estrutura dissertativa`),
     P1.d2("redacao", "Redação — texto final", "25–30 linhas cronometradas"),
-    P1.rev("Reler e marcar erros de coesão e norma culta"),
     P1.d3("redacao", "Correção", "Reescrever parágrafos fracos"),
     P1.d4("redacao", "Modelo", "Comparar com padrão de dissertação"),
   ]);
@@ -94,302 +126,247 @@ function domSimuladoP1(key, sem, n, foco) {
   diaP1(key, sem, [
     P1.d1("simulado", `Simulado — ${n} questões (1ª parte)`, `${foco} — cronometrado`),
     P1.d2("simulado", `Simulado — ${n} questões (2ª parte)`, "Continuar sem consulta"),
-    P1.rev("Conferir gabarito das questões feitas"),
     P1.d3("revisao", "Correção", "Anotar erros + ler explicação do gabarito"),
     P1.d4("revisao", "Reforço", "10 questões extras nos tópicos que errou"),
   ]);
 }
 
-function sabRedacaoP2(key, sem, tema) {
-  diaP2(key, sem, [
-    P2.d1("redacao", "Redação — rascunho", `${tema} — estrutura dissertativa`),
-    P2.d2("redacao", "Redação — texto final", "25–30 linhas cronometradas (50 min)"),
-    P2.d3("redacao", "Correção", "Reescrever parágrafos fracos + autoavaliação"),
-  ]);
+function sabRedacaoP2(key, sem, tema, fase) {
+  p2Dia2(key, sem,
+    ["redacao", "Redação — rascunho + texto final", `${tema} — 25–30 linhas cronometradas`],
+    ["redacao", "Correção + autoavaliação", "Reescrever parágrafos fracos"],
+    "", fase || 2);
 }
 
-function domSimuladoP2(key, sem, n, foco) {
-  diaP2(key, sem, [
-    P2.d1("simulado", `Simulado — ${n} questões`, `${foco} — cronometrado, sem consulta`),
-    P2.d2("revisao", "Correção", "Anotar erros + ler explicação do gabarito"),
-    P2.d3("revisao", "Reforço", "10 questões extras nos tópicos que errou"),
-  ]);
+function domSimuladoP2(key, sem, n, foco, fase) {
+  p2Dia2(key, sem,
+    ["simulado", `Simulado — ${n} questões`, `${foco} — cronometrado, sem consulta`],
+    ["revisao", "Correção + reforço", "Anotar erros + 10 questões extras"],
+    "", fase || 2);
 }
 
 function sabRedacaoP3(key, sem, tema) {
-  sabRedacaoP2(key, sem, tema);
-  CRONOGRAMA_DIAS[key].fase = 3;
+  sabRedacaoP2(key, sem, tema, 3);
 }
 
 function domSimuladoP3(key, sem, n, foco) {
-  domSimuladoP2(key, sem, n, foco);
-  CRONOGRAMA_DIAS[key].fase = 3;
+  domSimuladoP2(key, sem, n, foco, 3);
 }
 
-function p3Dia(key, sem, d1, d2, d3, nota) {
-  diaP3(key, sem, [P2.d1(...d1), P2.d2(...d2), P2.d3(...d3)], nota);
+function p3Dia2(key, sem, tarde, noite, nota) {
+  p2Dia2(key, sem, tarde, noite, nota, 3);
 }
 
 /* ══════════════════════════════════════════════════════════════
-   PERÍODO 1 — 21/07 a 02/08 · 4 disciplinas/dia
+   PERÍODO 1 — 21/07 a 02/08 · 3 ou 2 disciplinas/dia
+   Port/RLM 2×/sem · Informática 1×/sem
    ══════════════════════════════════════════════════════════════ */
 
 /* Semana 1 */
-p1Dia("2026-07-21", 1,
+p1Dia3("2026-07-21", 1,
+  [["portugues", "Língua Portuguesa", "Fonologia, ortografia e acentuação — 12 questões"],
+   ["rlm", "Raciocínio Lógico", "Conjuntos e sequências lógicas — 10 questões"]],
   ["legis", "Legislação CRA-PR/CFA", "Lei 4.769/1965 — 15 questões + quadro-resumo CFA/CRAs"],
-  ["portugues", "Língua Portuguesa", "Fonologia, ortografia e acentuação — 12 questões"],
-  ["especifico", "Cargo — Bloco C", "Arquitetura — numeração, CPU, interrupções (12 questões)"],
-  ["rlm", "Raciocínio Lógico", "Conjuntos e sequências lógicas — 10 questões"],
-  "Flashcards dos erros da manhã");
+  "Opção 3 — leves de manhã, pesada à noite");
 
-p1Dia("2026-07-22", 1,
-  ["legis", "Legislação CRA-PR/CFA", "Decreto 61.934/1967 — 15 questões (CFA × CRAs)"],
+p1Dia3inv("2026-07-22", 1,
+  ["especifico", "Conhecimentos do Cargo", "Item 1 — Arquitetura: numeração, CPU, interrupções (15 questões)"],
+  [["rlm", "Raciocínio Lógico", "Regra de três e razões — 10 questões"],
+   ["informatica", "Informática", "Hardware PC + Windows — 10 questões (1×/sem)"]],
+  "Opção 1 — Cargo de manhã, leves à noite");
+
+p1Dia2("2026-07-23", 1,
   ["adm", "Adm. Pública", "Art. 5º CF + Art. 37 CF — 12 questões"],
-  ["especifico", "Cargo — Bloco C", "Sistemas operacionais — processos, memória (12 questões)"],
-  ["informatica", "Informática", "Hardware PC + Windows — 10 questões"],
-  "Revisar pegadinhas CFA × CRA");
+  ["legis", "Legislação CRA-PR/CFA", "Decreto 61.934/1967 — 15 questões (CFA × CRAs)"],
+  "Dia só matérias extensas — 2 disciplinas");
 
-p1Dia("2026-07-23", 1,
-  ["portugues", "Língua Portuguesa", "Morfologia e classes de palavras — 12 questões"],
-  ["legis", "Legislação CRA-PR/CFA", "Regimento CRA-PR Arts. 1º–11º — 12 questões"],
-  ["especifico", "Cargo — Bloco C", "Estrutura de dados — árvores, grafos (12 questões)"],
-  ["rlm", "Raciocínio Lógico", "Regra de três e razões — 10 questões"],
-  "Resumo do que errou ontem");
-
-p1Dia("2026-07-24", 1,
-  ["legis", "Legislação CRA-PR/CFA", "Regimento Arts. 1º–11º — 2ª rodada (12 questões)"],
-  ["portugues", "Língua Portuguesa", "Sintaxe e período composto — 12 questões"],
-  ["adm", "Adm. Pública", "Centralização, descentração, direta/indireta — 10 questões"],
-  ["informatica", "Informática", "Google Docs/Planilhas — 10 questões"],
-  "Quadro-resumo organização administrativa");
+p1Dia2("2026-07-24", 1,
+  ["portugues", "Língua Portuguesa", "Morfologia e classes de palavras — 12 questões (2×/sem)"],
+  ["especifico", "Conhecimentos do Cargo", "Item 2 — SO: processos, memória virtual (15 questões)"],
+  "Dia só matérias extensas — Port + Cargo");
 
 sabRedacaoP1("2026-07-25", 1, "Tema: ética profissional do Administrador e fiscalização do CRA-PR");
 domSimuladoP1("2026-07-26", 1, 25, "Legislação + Português + RLM");
 
 /* Semana 2 */
-p1Dia("2026-07-27", 2,
-  ["legis", "Legislação CRA-PR/CFA", "Regimento Arts. 12º–23º — 15 questões"],
-  ["portugues", "Língua Portuguesa", "Concordância, regência e crase — 12 questões"],
-  ["especifico", "Cargo — Bloco B", "BD, modelo ER, normalização (12 questões)"],
-  ["rlm", "Raciocínio Lógico", "Progressões e combinatória — 10 questões"],
-  "Flashcards regimento CRA-PR");
+p1Dia3("2026-07-27", 2,
+  [["portugues", "Língua Portuguesa", "Sintaxe e período composto — 12 questões"],
+   ["rlm", "Raciocínio Lógico", "Progressões e combinatória — 10 questões"]],
+  ["legis", "Legislação CRA-PR/CFA", "Regimento CRA-PR Arts. 1º–11º — 12 questões"],
+  "Opção 3 — leves de manhã, Legislação à noite");
 
-p1Dia("2026-07-28", 2,
-  ["portugues", "Língua Portuguesa", "Interpretação de texto + pontuação — 12 questões"],
-  ["legis", "Legislação CRA-PR/CFA", "Regimento Arts. 24º–35º — 12 questões"],
-  ["especifico", "Cargo — Bloco B", "SQL, SGBD e redes — 12 questões"],
-  ["informatica", "Informática", "Internet + Teams/Meet/Zoom — 10 questões"],
-  "Revisar erros de concordância");
+p1Dia2("2026-07-28", 2,
+  ["especifico", "Conhecimentos do Cargo", "Item 3 — Estrutura de dados: árvores, grafos (15 questões)"],
+  ["adm", "Adm. Pública", "Centralização, descentração, direta/indireta — 12 questões"],
+  "Dia só matérias extensas");
 
-p1Dia("2026-07-29", 2,
-  ["legis", "Legislação CRA-PR/CFA", "Regimento Arts. 36º–55º — 12 questões"],
-  ["adm", "Adm. Pública", "LAI + LGPD + Improbidade — 10 questões"],
-  ["especifico", "Cargo — Bloco C", "Linguagens/POO + integração REST (12 questões)"],
-  ["rlm", "Raciocínio Lógico", "Probabilidade e lógica proposicional — 10 questões"],
-  "Mapa mental LAI × LGPD");
+p1Dia3inv("2026-07-29", 2,
+  ["especifico", "Conhecimentos do Cargo", "Item 5 — Redes: TCP/IP, protocolos (15 questões)"],
+  [["rlm", "Raciocínio Lógico", "Probabilidade e lógica proposicional — 10 questões"],
+   ["informatica", "Informática", "Google Docs/Planilhas + Internet — 10 questões (1×/sem)"]],
+  "Opção 1 — Cargo de manhã, RLM + Info à noite");
 
-p1Dia("2026-07-30", 2,
-  ["portugues", "Língua Portuguesa", "Semântica + interpretação — 12 questões"],
-  ["legis", "Legislação CRA-PR/CFA", "Código de Ética RN 640/2024 — 12 questões"],
-  ["especifico", "Cargo — Bloco A", "Dev Web + Django + Git — 10 questões"],
-  ["adm", "Adm. Pública", "Ato administrativo + agentes + poderes — 10 questões"],
-  "Correlação infrações × penas (ética)");
+p1Dia2("2026-07-30", 2,
+  ["portugues", "Língua Portuguesa", "Concordância, regência e crase — 12 questões (2×/sem)"],
+  ["adm", "Adm. Pública", "LAI + LGPD + Improbidade — 12 questões"],
+  "Dia só matérias extensas — Port + Adm");
 
-p1Dia("2026-07-31", 2,
-  ["legis", "Legislação CRA-PR/CFA", "Revisão Lei 4.769 + Decreto — 15 questões"],
-  ["portugues", "Língua Portuguesa", "Bateria mista — 12 questões"],
-  ["especifico", "Cargo — Bloco B", "UML + PMBOK — 10 questões"],
-  ["informatica", "Informática", "Revisão geral — 10 questões"],
-  "Última revisão antes do simulado");
+p1Dia2("2026-07-31", 2,
+  ["legis", "Legislação CRA-PR/CFA", "Regimento Arts. 12º–23º — 12 questões"],
+  ["especifico", "Conhecimentos do Cargo", "Item 6 — BD: modelo ER, normalização, SQL (15 questões)"],
+  "Dia só matérias extensas — Legislação + Cargo");
 
 sabRedacaoP1("2026-08-01", 2, "Tema: papel do CFA/CRAs na regulamentação da profissão");
 domSimuladoP1("2026-08-02", 2, 35, "Todas as disciplinas — aquecimento");
 
 /* ══════════════════════════════════════════════════════════════
-   PERÍODO 2 — 03/08 a 14/08 · 3 disciplinas/dia
+   A PARTIR DE 03/08 — 2 disciplinas/dia (tarde + noite)
+   Port/RLM 2×/sem · Informática 1×/sem
    ══════════════════════════════════════════════════════════════ */
 
-diaP2("2026-08-03", 3, [
-  P2.d1("legis", "Legislação CRA-PR/CFA", "2ª rodada Lei 4.769 + Decreto — 15 questões"),
-  P2.d2("portugues", "Língua Portuguesa", "Revisão ortografia + interpretação — 12 questões"),
-  P2.d3("especifico", "Cargo — Bloco A", "Dev Web + Django + Git — 10 questões"),
-], "Início do Período 2");
+p2Dia2("2026-08-03", 3,
+  ["legis", "Legislação CRA-PR/CFA", "2ª rodada Lei 4.769 + Decreto — 15 questões"],
+  ["especifico", "Conhecimentos do Cargo", "Item 4 — Linguagens: POO, tipificação (15 questões)"],
+  "Início do Período 2");
 
-diaP2("2026-08-04", 3, [
-  P2.d1("legis", "Legislação CRA-PR/CFA", "Regimento Arts. 1º–23º — 12 questões"),
-  P2.d2("adm", "Adm. Pública", "Licitação + responsabilidade civil do Estado — 10 questões"),
-  P2.d3("rlm", "Raciocínio Lógico", "Bateria mista — 10 questões"),
-]);
+p2Dia2("2026-08-04", 3,
+  ["portugues", "Língua Portuguesa", "Interpretação de texto + pontuação — 12 questões"],
+  ["adm", "Adm. Pública", "Ato administrativo + agentes + poderes — 12 questões"]);
 
-diaP2("2026-08-05", 3, [
-  P2.d1("portugues", "Língua Portuguesa", "Concordância, regência, crase — 12 questões"),
-  P2.d2("especifico", "Cargo — Bloco C", "SO + arquitetura — 12 questões"),
-  P2.d3("informatica", "Informática", "10 questões estilo Consulplan"),
-]);
+p2Dia2("2026-08-05", 3,
+  ["rlm", "Raciocínio Lógico", "Bateria mista — 10 questões"],
+  ["especifico", "Conhecimentos do Cargo", "Item 7 — SGBD: transação, concorrência (15 questões)"]);
 
-diaP2("2026-08-06", 3, [
-  P2.d1("legis", "Legislação CRA-PR/CFA", "Regimento Arts. 24º–55º — 12 questões"),
-  P2.d2("especifico", "Cargo — Bloco B", "BD + SQL + redes — 12 questões"),
-  P2.d3("adm", "Adm. Pública", "Ato administrativo + agentes — 8 questões"),
-]);
+p2Dia2("2026-08-06", 3,
+  ["portugues", "Língua Portuguesa", "Semântica + revisão ortográfica — 12 questões (2×/sem)"],
+  ["legis", "Legislação CRA-PR/CFA", "Regimento Arts. 24º–35º — 12 questões"]);
 
-diaP2("2026-08-07", 3, [
-  P2.d1("portugues", "Língua Portuguesa", "Sintaxe + semântica — 12 questões"),
-  P2.d2("legis", "Legislação CRA-PR/CFA", "Código de Ética RN 640/2024 — 12 questões"),
-  P2.d3("rlm", "Raciocínio Lógico", "15 questões cronometradas"),
-]);
+p2Dia2("2026-08-07", 3,
+  ["informatica", "Informática", "Teams/Meet/Zoom + revisão geral — 10 questões (1×/sem)"],
+  ["rlm", "Raciocínio Lógico", "Geometria e equações — 10 questões (2×/sem)"]);
 
 sabRedacaoP2("2026-08-08", 3, "Tema: registro profissional e exercício ilegal da Administração");
 domSimuladoP2("2026-08-09", 3, 40, "Todas as disciplinas");
 
-diaP2("2026-08-10", 4, [
-  P2.d1("legis", "Legislação CRA-PR/CFA", "Revisão completa — pegadinhas CFA×CRA (15 questões)"),
-  P2.d2("especifico", "Cargo — Bloco C", "Cloud, IA generativa + licitações TI — 10 questões"),
-  P2.d3("informatica", "Informática", "Revisão final — 10 questões"),
-]);
+p2Dia2("2026-08-10", 4,
+  ["legis", "Legislação CRA-PR/CFA", "Regimento Arts. 36º–55º + Código de Ética RN 671/2025 — 15 questões"],
+  ["especifico", "Conhecimentos do Cargo", "Item 13–15 — UML + Eng. de software (15 questões)"]);
 
-diaP2("2026-08-11", 4, [
-  P2.d1("portugues", "Língua Portuguesa", "Bateria completa — 15 questões"),
-  P2.d2("especifico", "Cargo — Bloco B", "UML + PMBOK — 10 questões"),
-  P2.d3("adm", "Adm. Pública", "LAI, LGPD, improbidade — 8 questões"),
-]);
+p2Dia2("2026-08-11", 4,
+  ["portugues", "Língua Portuguesa", "Bateria completa — 15 questões"],
+  ["adm", "Adm. Pública", "Licitação + responsabilidade civil do Estado — 12 questões"]);
 
-diaP2("2026-08-12", 4, [
-  P2.d1("legis", "Legislação CRA-PR/CFA", "Flashcards + 12 questões de lei seca"),
-  P2.d2("especifico", "Cargo — Blocos A e C", "Dev Web, GED, ITIL, COBIT — 12 questões"),
-  P2.d3("rlm", "Raciocínio Lógico", "Combinatória e probabilidade — 10 questões"),
-]);
+p2Dia2("2026-08-12", 4,
+  ["rlm", "Raciocínio Lógico", "Matrizes, determinantes e polinômios — 10 questões"],
+  ["especifico", "Conhecimentos do Cargo", "Item 16–17 — PMBOK, GED, ITIL, COBIT (15 questões)"]);
 
-diaP2("2026-08-13", 4, [
-  P2.d1("portugues", "Língua Portuguesa", "Simulado parcial — 10 questões cronometradas"),
-  P2.d2("legis", "Legislação CRA-PR/CFA", "Simulado parcial — 10 questões cronometradas"),
-  P2.d3("especifico", "Cargo — TI", "Simulado parcial — 15 questões cronometradas"),
-]);
+p2Dia2("2026-08-13", 4,
+  ["portugues", "Língua Portuguesa", "Simulado parcial — 10 questões cronometradas (2×/sem)"],
+  ["legis", "Legislação CRA-PR/CFA", "Simulado parcial — 10 questões cronometradas"]);
 
-diaP2("2026-08-14", 4, [
-  P2.d1("adm", "Adm. Pública", "Simulado parcial — 5 questões cronometradas"),
-  P2.d2("rlm", "Raciocínio Lógico", "Simulado parcial — 5 questões cronometradas"),
-  P2.d3("informatica", "Informática", "Simulado parcial — 5 questões cronometradas"),
-], "Último dia do Período 2");
+p2Dia2("2026-08-14", 4,
+  ["informatica", "Informática", "Simulado parcial — 5 questões cronometradas (1×/sem)"],
+  ["especifico", "Conhecimentos do Cargo", "Itens 18–21 — Web, Django, DevOps (15 questões)"],
+  "Último dia antes da Fase 3");
 
 /* ══════════════════════════════════════════════════════════════
-   PERÍODO 3 — 15/08 a 12/09 · 3 disciplinas/dia (simulados e revisão)
+   FASE 3 — 15/08 a 12/09 · 2 disciplinas/dia (simulados e revisão)
    ══════════════════════════════════════════════════════════════ */
 
 sabRedacaoP3("2026-08-15", 5, "Tema: gestão pública e tecnologia da informação");
 domSimuladoP3("2026-08-16", 5, 45, "Todas as disciplinas — ritmo de prova");
 
-p3Dia("2026-08-17", 5,
+p3Dia2("2026-08-17", 5,
   ["legis", "Legislação CRA-PR/CFA", "Revisão integrada — 12 questões"],
-  ["portugues", "Língua Portuguesa", "Pontos fracos — 10 questões"],
-  ["especifico", "Cargo — Bloco C", "Revisão SO + arquitetura — 8 questões"]);
+  ["portugues", "Língua Portuguesa", "Pontos fracos — 10 questões"]);
 
-p3Dia("2026-08-18", 5,
-  ["portugues", "Língua Portuguesa", "Interpretação + pontuação — 10 questões"],
-  ["adm", "Adm. Pública", "Revisão Art. 37 + licitações — 8 questões"],
-  ["rlm", "Raciocínio Lógico", "Bateria mista — 8 questões"]);
+p3Dia2("2026-08-18", 5,
+  ["rlm", "Raciocínio Lógico", "Bateria mista — 8 questões"],
+  ["adm", "Adm. Pública", "Revisão Art. 37 + licitações — 8 questões"]);
 
-p3Dia("2026-08-19", 5,
-  ["legis", "Legislação CRA-PR/CFA", "Código de Ética — infrações e penas (10 questões)"],
-  ["especifico", "Cargo — Bloco B", "BD + SQL + redes — 8 questões"],
-  ["informatica", "Informática", "8 questões estilo banca"]);
+p3Dia2("2026-08-19", 5,
+  ["informatica", "Informática", "8 questões estilo banca (1×/sem)"],
+  ["especifico", "Conhecimentos do Cargo", "Itens 1–3 — SO, arquitetura, ED (12 questões)"]);
 
-p3Dia("2026-08-20", 5,
-  ["especifico", "Cargo — Bloco A", "Dev Web, Django, DevOps — 8 questões"],
-  ["legis", "Legislação CRA-PR/CFA", "Flashcards lei seca"],
-  ["portugues", "Língua Portuguesa", "Crase e concordância — 8 questões"]);
+p3Dia2("2026-08-20", 5,
+  ["portugues", "Língua Portuguesa", "Crase e concordância — 8 questões (2×/sem)"],
+  ["legis", "Legislação CRA-PR/CFA", "Flashcards lei seca + 8 questões"]);
 
-p3Dia("2026-08-21", 5,
-  ["portugues", "Língua Portuguesa", "Simulado parcial — 10 questões"],
-  ["legis", "Legislação CRA-PR/CFA", "Simulado parcial — 10 questões"],
-  ["adm", "Adm. Pública", "Simulado parcial — 5 questões"]);
+p3Dia2("2026-08-21", 5,
+  ["especifico", "Conhecimentos do Cargo", "Itens 5–7 — Redes, BD, SGBD (12 questões)"],
+  ["rlm", "Raciocínio Lógico", "8 questões (2×/sem)"]);
 
 sabRedacaoP3("2026-08-22", 5, "Tema: responsabilidade ética do administrador de sistemas");
 domSimuladoP3("2026-08-23", 5, 50, "1º simulado completo — 50 questões, corte 60%");
 
 /* Semana 6 — reta de simulados */
-p3Dia("2026-08-24", 6,
+p3Dia2("2026-08-24", 6,
   ["revisao", "Correção simulado", "Análise detalhada dos erros de domingo"],
-  ["revisao", "Reforço", "15 questões nos tópicos que mais errou"],
-  ["legis", "Legislação CRA-PR/CFA", "Flashcards express"]);
+  ["legis", "Legislação CRA-PR/CFA", "Flashcards express + 8 questões"]);
 
-p3Dia("2026-08-25", 6,
+p3Dia2("2026-08-25", 6,
   ["simulado", "Simulado completo", "50 questões — 2º simulado integral"],
-  ["revisao", "Correção", "Legislação e Português — pontos fracos"],
-  ["portugues", "Língua Portuguesa", "8 questões direcionadas"]);
+  ["portugues", "Língua Portuguesa", "8 questões direcionadas nos erros (2×/sem)"]);
 
-p3Dia("2026-08-26", 6,
+p3Dia2("2026-08-26", 6,
   ["revisao", "Revisão direcionada", "Só erros dos 2 simulados — sem conteúdo novo"],
-  ["especifico", "Cargo — TI", "12 questões nos tópicos fracos"],
-  ["rlm", "Raciocínio Lógico", "8 questões"]);
+  ["especifico", "Conhecimentos do Cargo", "12 questões nos tópicos fracos"]);
 
-p3Dia("2026-08-27", 6,
+p3Dia2("2026-08-27", 6,
   ["simulado", "Simulado completo", "50 questões — 3º simulado integral"],
-  ["revisao", "Correção simulado", "Mapa de erros por disciplina"],
-  ["adm", "Adm. Pública", "Resumo Art. 37 + licitações"]);
+  ["rlm", "Raciocínio Lógico", "8 questões (2×/sem)"]);
 
-p3Dia("2026-08-28", 6,
+p3Dia2("2026-08-28", 6,
   ["revisao", "Revisão leve", "Quadros-resumo Legislação + Adm. Pública"],
-  ["revisao", "Revisão leve", "Resumos Português + Cargo"],
-  ["informatica", "Informática", "5 questões de aquecimento"]);
+  ["adm", "Adm. Pública", "Resumo Art. 37 + licitações — 5 questões"]);
 
 sabRedacaoP3("2026-08-29", 6, "Tema: ética, LGPD e administração pública");
 domSimuladoP3("2026-08-30", 6, 50, "4º simulado completo — 50 questões");
 
 /* Semana 7 */
-p3Dia("2026-08-31", 7,
+p3Dia2("2026-08-31", 7,
   ["revisao", "Correção simulado", "Última análise de erros recorrentes"],
-  ["revisao", "Flashcards finais", "Legislação CRA-PR/CFA"],
-  ["portugues", "Língua Portuguesa", "Crase, concordância, regência"]);
+  ["legis", "Legislação CRA-PR/CFA", "Decoreba express — CFA × CRA"]);
 
-p3Dia("2026-09-01", 7,
+p3Dia2("2026-09-01", 7,
   ["simulado", "Simulado completo", "50 questões — 5º simulado integral"],
-  ["revisao", "Correção final", "Só gabarito dos erros"],
-  ["legis", "Legislação CRA-PR/CFA", "Quadro CFA × CRA × competências"]);
+  ["portugues", "Língua Portuguesa", "Crase, concordância, regência (2×/sem)"]);
 
-p3Dia("2026-09-02", 7,
+p3Dia2("2026-09-02", 7,
   ["revisao", "Revisão leve", "Passada nos resumos — sem conteúdo novo"],
-  ["revisao", "Descanso ativo", "Reler anotações"],
-  ["especifico", "Cargo — TI", "5 questões de pontos fracos"]);
+  ["especifico", "Conhecimentos do Cargo", "5 questões de pontos fracos"]);
 
-p3Dia("2026-09-03", 7,
-  ["revisao", "Revisão leve", "Flashcards legislação + português"],
-  ["adm", "Adm. Pública", "Resumo final — 5 questões"],
-  ["rlm", "Raciocínio Lógico", "5 questões"]);
+p3Dia2("2026-09-03", 7,
+  ["informatica", "Informática", "5 questões de aquecimento (1×/sem)"],
+  ["rlm", "Raciocínio Lógico", "5 questões (2×/sem)"]);
 
-p3Dia("2026-09-04", 7,
-  ["revisao", "Revisão final", "Última passada nos flashcards"],
-  ["revisao", "Descanso", "Preparar material para a prova"],
-  ["informatica", "Informática", "3 questões de aquecimento"]);
+p3Dia2("2026-09-04", 7,
+  ["revisao", "Revisão final", "Flashcards legislação + português"],
+  ["adm", "Adm. Pública", "Resumo final — 5 questões"]);
 
 sabRedacaoP3("2026-09-05", 7, "Tema livre — simular condição de prova");
 domSimuladoP3("2026-09-06", 7, 30, "Aquecimento — 30 questões fáceis");
 
 /* Semana 8 — reta final */
-p3Dia("2026-09-07", 8,
+p3Dia2("2026-09-07", 8,
   ["revisao", "Correção", "Revisar erros do simulado de domingo"],
-  ["revisao", "Revisão leve", "Só o que ainda erra"],
   ["legis", "Legislação CRA-PR/CFA", "Decoreba express"]);
 
-p3Dia("2026-09-08", 8,
+p3Dia2("2026-09-08", 8,
   ["revisao", "Revisão leve", "Mapas mentais — máximo 1h de estudo"],
-  ["revisao", "Descanso ativo", "Reler anotações finais"],
   ["portugues", "Língua Portuguesa", "3 questões de aquecimento"]);
 
-p3Dia("2026-09-09", 8,
+p3Dia2("2026-09-09", 8,
   ["revisao", "Revisão leve", "Legislação: último quadro-resumo"],
-  ["revisao", "Descanso", "Sem estudo pesado"],
-  ["revisao", "Mental", "Visualizar estrutura da prova"]);
+  ["revisao", "Descanso", "Sem estudo pesado — visualizar estrutura da prova"]);
 
-p3Dia("2026-09-10", 8,
+p3Dia2("2026-09-10", 8,
   ["revisao", "Revisão final", "Flashcards — 30 min no máximo"],
-  ["revisao", "Descanso", "Descansar cedo"],
   ["revisao", "Preparação", "Separar documentos e material"]);
 
-p3Dia("2026-09-11", 8,
+p3Dia2("2026-09-11", 8,
   ["revisao", "Descanso", "Sem estudo — preparar para amanhã"],
-  ["revisao", "Descanso", "Reler anotações por 15 min (opcional)"],
-  ["revisao", "Descanso", "Dormir cedo"]);
+  ["revisao", "Descanso", "Reler anotações por 15 min (opcional)"]);
 
 sabRedacaoP3("2026-09-12", 8, "Rascunho leve — 1 parágrafo (sem pressão)");
 

@@ -130,8 +130,9 @@
       </div>
       <div class="sidebar-block">
         <h3>Fases</h3>
-        <p class="cal-fase cal-fase-1"><strong>Fase 1</strong> 20/07–03/08 · 8h/dia</p>
-        <p class="cal-fase cal-fase-2"><strong>Fase 2</strong> 04/08–13/09 · ~19h/sem</p>
+        <p class="cal-fase cal-fase-1"><strong>Fase 1</strong> 21/07–02/08 · 3–4 blocos/dia (manhã + noite)</p>
+        <p class="cal-fase cal-fase-2"><strong>Fase 2</strong> 03/08–14/08 · 2 disc/dia (tarde + noite)</p>
+        <p class="cal-fase cal-fase-3"><strong>Fase 3</strong> 15/08–12/09 · 2 disc/dia + simulados</p>
       </div>
       <div class="sidebar-block">
         <h3>Regras</h3>
